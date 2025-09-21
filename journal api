@@ -1,0 +1,69 @@
+import { type NextRequest, NextResponse } from "next/server"
+
+// Mock data storage (in a real app, this would be a database)
+const journalEntries = [
+  {
+    id: "1",
+    time: "09:30",
+    activity: "Morning walk in the park",
+    description: "Enjoyed a peaceful walk with beautiful weather. Saw some friendly neighbors.",
+    type: "exercise" as const,
+    mood: "happy" as const,
+    location: "Central Park",
+  },
+  {
+    id: "2",
+    time: "14:00",
+    activity: "Video call with grandchildren",
+    description: "Had a wonderful conversation with Emma and Jake. They showed me their school projects.",
+    type: "social" as const,
+    mood: "happy" as const,
+    location: "Home",
+  },
+]
+
+export async function GET() {
+  try {
+    return NextResponse.json({
+      success: true,
+      entries: journalEntries,
+      message: `Found ${journalEntries.length} journal entries`,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      {
+        success: false,
+        entries: [],
+        message: "Failed to fetch journal entries",
+      },
+      { status: 500 },
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const newEntry = {
+      id: Date.now().toString(),
+      ...body,
+    }
+
+    journalEntries.push(newEntry)
+
+    return NextResponse.json({
+      success: true,
+      entry: newEntry,
+      message: "Journal entry created successfully",
+    })
+  } catch (error) {
+    return NextResponse.json(
+      {
+        success: false,
+        entry: null,
+        message: "Failed to create journal entry",
+      },
+      { status: 500 },
+    )
+  }
+}
