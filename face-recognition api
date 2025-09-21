@@ -1,0 +1,126 @@
+import { type NextRequest, NextResponse } from "next/server"
+
+// Mock database for faces (in a real app, this would be a proper database)
+const facesDatabase: Array<{
+  id: string
+  name: string
+  relation: string
+  imageUrl: string
+  lastSeen: string
+  notes?: string
+}> = [
+  {
+    id: "1",
+    name: "Sarah Johnson",
+    relation: "daughter",
+    imageUrl: "/elderly-woman-smiling.png",
+    lastSeen: "2024-01-15",
+    notes: "Lives in Seattle, calls every Sunday",
+  },
+  {
+    id: "2",
+    name: "Dr. Martinez",
+    relation: "doctor",
+    imageUrl: "/doctor-with-stethoscope.png",
+    lastSeen: "2024-01-10",
+    notes: "Family physician at City Medical Center",
+  },
+]
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData()
+    const image = formData.get("image") as File
+    const action = formData.get("action") as string
+
+    if (action === "add-face") {
+      // Handle adding a new face
+      const name = formData.get("name") as string
+      const relation = formData.get("relation") as string
+      const notes = formData.get("notes") as string
+
+      if (!name || !relation) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Name and relation are required",
+          },
+          { status: 400 },
+        )
+      }
+
+      const newFace = {
+        id: Date.now().toString(),
+        name,
+        relation,
+        imageUrl: "/thoughtful-artist.png",
+        lastSeen: new Date().toISOString().split("T")[0],
+        notes: notes || undefined,
+      }
+
+      facesDatabase.push(newFace)
+
+      return NextResponse.json({
+        success: true,
+        message: `${name} has been added to your memory database`,
+        face: newFace,
+      })
+    }
+
+    if (!image) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No image provided",
+        },
+        { status: 400 },
+      )
+    }
+
+    // Simulate face recognition processing
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+
+    // Mock recognition logic - randomly match with existing faces
+    const randomMatch = Math.random() > 0.3 // 70% chance of recognition
+
+    if (randomMatch && facesDatabase.length > 0) {
+      const matchedFace = facesDatabase[Math.floor(Math.random() * facesDatabase.length)]
+      const confidence = 0.85 + Math.random() * 0.1 // 85-95% confidence
+
+      return NextResponse.json({
+        success: true,
+        person: {
+          name: matchedFace.name,
+          relation: matchedFace.relation,
+          lastSeen: matchedFace.lastSeen,
+          notes: matchedFace.notes,
+        },
+        confidence,
+        message: `Recognized ${matchedFace.name}`,
+      })
+    } else {
+      return NextResponse.json({
+        success: false,
+        message: "Person not recognized. Would you like to add them to your memory database?",
+      })
+    }
+  } catch (error) {
+    console.error("Face recognition API error:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        message: "An error occurred while processing the image",
+      },
+      { status: 500 },
+    )
+  }
+}
+
+export async function GET() {
+  // Return all saved faces
+  return NextResponse.json({
+    success: true,
+    faces: facesDatabase,
+    message: "Faces retrieved successfully",
+  })
+}
