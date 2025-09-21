@@ -1,0 +1,65 @@
+import { type NextRequest, NextResponse } from "next/server"
+
+// This would normally be imported from a shared location
+const reminders = [
+  {
+    id: "1",
+    type: "medication" as const,
+    title: "Take morning vitamins",
+    time: "08:00",
+    description: "Vitamin D and B12 supplements",
+    completed: false,
+    priority: "high" as const,
+  },
+  {
+    id: "2",
+    type: "meal" as const,
+    title: "Lunch time",
+    time: "12:30",
+    description: "Remember to eat a balanced meal",
+    completed: false,
+    priority: "medium" as const,
+  },
+  {
+    id: "3",
+    type: "hydration" as const,
+    title: "Drink water",
+    time: "15:00",
+    description: "Stay hydrated throughout the day",
+    completed: true,
+    priority: "low" as const,
+  },
+]
+
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params
+    const body = await request.json()
+
+    const reminderIndex = reminders.findIndex((r) => r.id === id)
+    if (reminderIndex === -1) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Reminder not found",
+        },
+        { status: 404 },
+      )
+    }
+
+    reminders[reminderIndex] = { ...reminders[reminderIndex], ...body }
+
+    return NextResponse.json({
+      success: true,
+      message: "Reminder updated successfully",
+    })
+  } catch (error) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to update reminder",
+      },
+      { status: 500 },
+    )
+  }
+}
